@@ -48,8 +48,9 @@ No Modo Normal, o semáforo realiza o ciclo tradicional (verde → amarelo → v
    - A tarefa do buzzer também foi similar às anteriores, feita a inicialização e configuração dos GPIOs dos buzzers e do PWM e dentro do loop principal é verificado pela função “Switch” o valor da variável “cor_semaforo”, em cada caso os buzzers emitem um sinal sonoro com diferentes tempos de ligado e desligado, formando beeps diferentes, o tempo referente a cada cor do semáforo está exposto na Tabela.
   
 6. Modo noturno:
-  - No modo noturno apenas a cor amarela do semáforo é acesa, alternando entre acesa e apagada para indicar que o semáforo está desligado e deve se ter atenção ao cruzá-lo.
-  - A alteração dos modos entre normal e noturno foi feita através do botão A, foi utilizado interrupção e debouncing para a implementação deste botão.
+
+   - No modo noturno apenas a cor amarela do semáforo é acesa, alternando entre acesa e apagada para indicar que o semáforo está desligado e deve se ter atenção ao cruzá-lo.
+   - A alteração dos modos entre normal e noturno foi feita através do botão A, foi utilizado interrupção e debouncing para a implementação deste botão.
   
 ## Ferramentas utilizadas
 
