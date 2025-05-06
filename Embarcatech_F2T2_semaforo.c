@@ -1,3 +1,4 @@
+// -- Inclusão de bibliotecas
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
@@ -31,10 +32,11 @@
 ssd1306_t ssd; // Inicializa a estrutura do display
 
 // -- Definição de variáveis globais
-static volatile uint32_t last_time = 0; // Armazena o tempo do último clique dos botões
+static volatile uint32_t last_time = 0; // Armazena o tempo do último clique dos botões (debounce)
 volatile bool modo_noturno = false; // Modo noturno ligado ou desligado
 volatile int tempo = 100; // Variável auxiliar para definir a cor do semáforo sem utilizar delay na task semáforo
 volatile int cor_semaforo = 0; // Cor do semáforo atual (0 = verde, 1 = amarelo, 2 = vermelho, 3 = amarelo do modo noturno, 4 = apagado)
+
 
 // --- Funções necessária para a manipulação da matriz de LEDs
 
@@ -87,6 +89,7 @@ int getIndex(int x, int y) {
 }
 
 // --- Final das funções necessária para a manipulação da matriz de LEDs
+
 
 // Tarefa que guarda a lógica de tempo do semáforo
 void vSemaforoTask(){
@@ -153,6 +156,7 @@ void vLEDTask(){
 
 // Tarefa que processa as cores do semáforo na Matriz de LEDs
 void vMatrizTask(){
+    // Inicialização do PIO
     np_pio = pio0;
     sm = pio_claim_unused_sm(np_pio, true);
     uint offset = pio_add_program(pio0, &ws2818b_program);
@@ -167,7 +171,7 @@ void vMatrizTask(){
                 cor(7, 0, 100, 0); // Posição e cor do sinal verde
                 break;
             case 1:
-                cor(12, 100, 100, 0); // Posição e cor do sinal verde
+                cor(12, 100, 100, 0); // Posição e cor do sinal amarelo
                 break;
             case 2:
                 cor(17, 100, 0, 0); // Posição e cor do sinal vermelho
@@ -186,7 +190,7 @@ void vMatrizTask(){
 
 // Tarefa que atualiza as informaçõs do display
 void vDisplayTask(){
-    // Display I2C
+    // Inicialização dp Display I2C
     i2c_init(display_i2c_port, 400 * 1000); // Inicializa o I2C usando 400kHz
     gpio_set_function(display_i2c_sda, GPIO_FUNC_I2C); // Define o pino SDA (GPIO 14) na função I2C
     gpio_set_function(display_i2c_scl, GPIO_FUNC_I2C); // Define o pino SCL (GPIO 15) na função I2C
@@ -229,6 +233,7 @@ void vDisplayTask(){
         ssd1306_rect(&ssd, 39, 24, 8, 8, true, false); // Desenha um retângulo
         ssd1306_rect(&ssd, 50, 24, 8, 8, true, false); // Desenha um retângulo
 
+        // Preenche o quadrado referente a cor do semáforo
         switch (cor_semaforo){
             case 0:
                 ssd1306_rect(&ssd, 50, 24, 8, 8, true, true); // Desenha um retângulo
@@ -245,8 +250,6 @@ void vDisplayTask(){
             default:
                 break;
         }
-
-
         ssd1306_send_data(&ssd); // Atualiza o display
         vTaskDelay(pdMS_TO_TICKS(100));
     }
@@ -261,19 +264,20 @@ void vBuzzerTask(){
     uint clock_div = 4; // Divisor do clock
     uint wrap = (125000000 / (clock_div * freq)) - 1; // Define o valor do wrap para frequência escolhida
 
-    uint slice_A = pwm_gpio_to_slice_num(buzzer_A);
-    uint slice_B = pwm_gpio_to_slice_num(buzzer_B);
+    uint slice_A = pwm_gpio_to_slice_num(buzzer_A); // Define o slice do buzzer A
+    uint slice_B = pwm_gpio_to_slice_num(buzzer_B); // Define o slice do buzzer B
 
     pwm_set_clkdiv(slice_A, clock_div); // Define o divisor do clock para o buzzer A
     pwm_set_clkdiv(slice_B, clock_div); // Define o divisor do clock para o buzzer B
     pwm_set_wrap(slice_A, wrap); // Define o valor do wrap para o buzzer A
     pwm_set_wrap(slice_B, wrap); // Define o valor do wrap para o buzzer B
-    pwm_set_chan_level(slice_A, pwm_gpio_to_channel(buzzer_A), wrap / 40); // Duty cycle de 50% (Volume) para o buzzer A
-    pwm_set_chan_level(slice_B, pwm_gpio_to_channel(buzzer_B), wrap / 40); // Duty cycle de 50% (Volume) para o buzzer B
+    pwm_set_chan_level(slice_A, pwm_gpio_to_channel(buzzer_A), wrap / 40); // Duty cycle para definir o Volume do buzzer A
+    pwm_set_chan_level(slice_B, pwm_gpio_to_channel(buzzer_B), wrap / 40); // Duty cycle para definir o volume do buzzer B
 
     while(true){
         switch (cor_semaforo){
         case 0:
+            // Para a cor verde os buzzers ficam 200ms ligado e 800ms desligado
             pwm_set_enabled(slice_A, true);
             pwm_set_enabled(slice_B, true);
             vTaskDelay(pdMS_TO_TICKS(200));
@@ -282,6 +286,7 @@ void vBuzzerTask(){
             vTaskDelay(pdMS_TO_TICKS(800));
             break;
         case 1:
+            // Para a cor amarela os buzzers ficam 100ms ligado e 100ms desligado
             pwm_set_enabled(slice_A, true);
             pwm_set_enabled(slice_B, true);
             vTaskDelay(pdMS_TO_TICKS(100));
@@ -290,6 +295,7 @@ void vBuzzerTask(){
             vTaskDelay(pdMS_TO_TICKS(100));
             break;
         case 2:
+            // Para a cor vermelho os buzzers ficam 500ms ligado e 1500ms desligado
             pwm_set_enabled(slice_A, true);
             pwm_set_enabled(slice_B, true);
             vTaskDelay(pdMS_TO_TICKS(500));
@@ -298,10 +304,12 @@ void vBuzzerTask(){
             vTaskDelay(pdMS_TO_TICKS(1500));
             break;
         case 3:
+            // Para a cor amarela do modo noturno os buzzers ficam ligados enquanto o LED está aceso...
             pwm_set_enabled(slice_A, true);
             pwm_set_enabled(slice_B, true);
             break;
         case 4:
+            // ...E desligados enquanto o LED está apagado
             pwm_set_enabled(slice_A, false);
             pwm_set_enabled(slice_B, false);
         default:
@@ -317,6 +325,7 @@ void gpio_irq_handler(uint gpio, uint32_t events){
     uint32_t current_time = to_us_since_boot(get_absolute_time()); // Pega o tempo atual e transforma em us
     if(current_time - last_time > 1000000){
         if(gpio == button_A){
+            // Botão A inverte o valor do modo noturno (alternando entre normal e noturno)
             modo_noturno = !modo_noturno;
             tempo = 0;
         }else if(gpio == button_B){
