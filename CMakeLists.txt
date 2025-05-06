@@ -24,7 +24,7 @@ include(pico_sdk_import.cmake)
 set(FREERTOS_KERNEL_PATH "C:/FreeRTOS-Kernel")
 include(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
-project(PiscaLed C CXX ASM)
+project(Embarcatech_F2T2_semaforo C CXX ASM)
 pico_sdk_init()
 
 
@@ -36,12 +36,17 @@ add_executable(${PROJECT_NAME}
         lib/ssd1306.c # Biblioteca para o display OLED
         )
 
+# Generate PIO header
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 
 target_link_libraries(${PROJECT_NAME} 
         pico_stdlib 
         hardware_gpio
         hardware_i2c
+        hardware_pwm
+        hardware_pio
         FreeRTOS-Kernel 
         FreeRTOS-Kernel-Heap4
         )
