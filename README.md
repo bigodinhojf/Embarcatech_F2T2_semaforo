@@ -30,9 +30,9 @@ No Modo Normal, o semáforo realiza o ciclo tradicional (verde → amarelo → v
    - A variável tempo foi utilizada para que a verificação do modo noturno aconteça a cada 100ms, pois com a utilização de delays maiores o modo noturno era alterado e a sinalização só alterava ao final do ciclo de sinalização.
    - Foi utilizado variáveis globais auxiliares, pois as tarefas que vão implementar as outras funcionalidades precisarão ler qual sinalização está acesa naquele momento.
    - O tempo dos sinais do semáforo está exposto na Tabela.
-  
+
 <div align="center">
-    <img width = "60%" src = "https://github.com/user-attachments/assets/60a8abde-56d4-40dc-9d10-4cf148d29896">
+    <img width = "60%" src = "https://github.com/user-attachments/assets/6cbf69cf-1c32-4ca7-8929-788d2b871670">
 </div>
 
 2. LED RGB:
@@ -52,7 +52,7 @@ No Modo Normal, o semáforo realiza o ciclo tradicional (verde → amarelo → v
    - A tarefa do buzzer também foi similar às anteriores, feita a inicialização e configuração dos GPIOs dos buzzers e do PWM e dentro do loop principal é verificado pela função “Switch” o valor da variável “cor_semaforo”, em cada caso os buzzers emitem um sinal sonoro com diferentes tempos de ligado e desligado, formando beeps diferentes, o tempo referente a cada cor do semáforo está exposto na Tabela.
 
 <div align="center">
-    <img width = "65%" src = "https://github.com/user-attachments/assets/65af02f5-cee5-424a-8116-82251911d557">
+    <img width = "65%" src = "https://github.com/user-attachments/assets/c748605c-a800-44ba-9d36-523d7a0ecb47">
 </div>
   
 6. Modo noturno:
